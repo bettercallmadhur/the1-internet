@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The $1 Internet</title>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+  :root {
+    --bar: #E6D5BD;
+    --bar-border: #c4ad8c;
+    --btn: #f7efe2;
+    --field: #faf7f2;
+    --ink: #3b2f22;
+    --muted: #7a6a55;
+    --page: #faf7f2;
+    --red: #d62828;
+    --yellow: #f2b705;
+    --menu-h: 60px;
+    --sky-top: #6fa8d8;
+    --sky-bottom: #b9d8ee;
+    --ground-top: #7d8a5a;
+    --ground-bottom: #56643f;
+    --sun-glow: rgba(255, 255, 255, 0.45);
+    --bulb-off: #c9c2a8;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: "Caviar Dreams", "Trebuchet MS", system-ui, sans-serif;
+  }
+
+  /* ---------- Menu bar ---------- */
+  #menu {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--bar);
+    border-bottom: 2px solid var(--bar-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    padding: 8px 14px;
+  }
+  .brand {
+    font-family: "Lazy Arie", "Comic Sans MS", cursive;
+    font-size: 1.9rem;
+    line-height: 1;
+    white-space: nowrap;
+    margin-right: 6px;
+  }
+  .brand .red { color: var(--red); }
+  .brand .yellow { color: var(--yellow); text-shadow: 1px 1px 0 #7a1f1f; }
+
+  .tags { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .tag {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--bar-border);
+    background: var(--btn);
+    color: var(--ink);
+  }
+  .tag.red { color: var(--red); }
+  .tag.yellow { color: #b07f00; }
+  .stats { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+  .tag.stat { font-variant-numeric: tabular-nums; font-weight: bold; }
+
+  /* ---------- Premium Tile: roadside billboards ---------- */
+  .prem-wrap { max-width: 1200px; margin: 0 auto; padding: 32px 24px 90px; }
+  .prem-wrap .p-sub { margin-bottom: 0; }
+  .bb-list { display: flex; flex-direction: column; gap: 64px; margin-top: 36px; }
+  .bb-row { display: flex; }
+  .bb-row.left { justify-content: flex-start; }
+  .bb-row.right { justify-content: flex-end; }
+  .bb-col { width: min(100%, 720px); }
+
+  /* Roadside scene: sky, ground and the billboard on its posts */
+  .scene {
+    position: relative;
+    height: 380px;
+    border-radius: 18px;
+    overflow: hidden;
+    background:
+      radial-gradient(70% 45% at 78% 22%, var(--sun-glow), transparent 70%),
+      linear-gradient(var(--sky-top) 0%, var(--sky-bottom) 58%, var(--ground-top) 58%, var(--ground-bottom) 100%);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  /* Catwalk lights along the top of the board */
+  .lights {
+    position: absolute;
+    left: 6%; right: 6%; top: 7%;
+    height: 14px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .bulb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--bulb-off);
+    box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.25);
+    transition: background 0.6s, box-shadow 0.6s;
+  }
+  /* Lights switch on from dusk to dawn */
+  html.is-night .bulb {
+    background: #fff6c2;
+    box-shadow: 0 0 10px 4px rgba(255, 236, 150, 0.85), 0 0 26px 10px rgba(255, 236, 150, 0.35);
+  }
+
+  /* The billboard face: grey panel with a dark frame, like a real roadside board */
+  .board {
+    position: absolute;
+    left: 6%; right: 6%; top: 15%;
+    height: 42%;
+    display: flex;
+    align-items: center;
+    gap: 4%;
+    padding: 0 4%;
+    border: 9px solid #2a2b2e;
+    border-radius: 4px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+    text-decoration: none;
+    overflow: hidden;
+    z-index: 2;
+  }
+  .board::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 45%);
+    pointer-events: none;
+  }
+  .b-logo {
+    flex: 0 0 22%;
+    height: 72%;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(0.55rem, 1vw, 0.75rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+  .b-copy { flex: 1; min-width: 0; }
+  .b-head {
+    font-size: clamp(1rem, 2.7vw, 2rem);
+    font-weight: bold;
+    line-height: 1.1;
+  }
+  .b-sub { font-size: clamp(0.6rem, 1.2vw, 0.9rem); opacity: 0.85; margin-top: 6px; }
+  .b-bar { height: 4px; width: 38%; margin-top: 10px; border-radius: 2px; }
+
+  /* Two steel posts that reach the ground */
+  .post {
+    position: absolute;
+    top: 57%;
+    bottom: 0;
+    width: 14px;
+    background: linear-gradient(90deg, #5b5d61, #2b2c2f);
+    z-index: 1;
+  }
+  .post.a { left: 30%; }
+  .post.b { left: 64%; }
+
+  .bb-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .bb-slot { font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .bb-btn {
+    background: var(--red);
+    color: #ffffff;
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 800px) {
+    .scene { height: 260px; }
+    .bb-list { gap: 40px; }
+    .bb-row.left, .bb-row.right { justify-content: center; }
+  }
+
+  /* ---------- Billboard booking ---------- */
+  .bb-btn { border: none; font: inherit; cursor: pointer; }
+  .bb-btn:disabled { opacity: 0.6; cursor: default; }
+  .bb-booked { font-size: 0.9rem; color: var(--ink); font-weight: bold; }
+  .bk {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: rgba(40, 30, 20, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .bk-card {
+    width: min(960px, 100%);
+    max-height: 92vh;
+    overflow: auto;
+    background: var(--bar);
+    border: 2px solid var(--bar-border);
+    border-radius: 16px;
+    padding: 22px 24px;
+    color: var(--ink);
+  }
+  .bk-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .bk-close { font: inherit; font-size: 1.6rem; line-height: 1; background: none; border: none; color: var(--ink); cursor: pointer; }
+  .bk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 12px; }
+  .bk-color {
+    width: 72px; height: 40px;
+    border: 2px solid var(--bar-border);
+    border-radius: 8px;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .bk-scene { height: 260px; }
+  .bk-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .bk-price { font-size: 1.3rem; color: var(--red); }
+  .bk-row { display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+  .bk-row > * { flex: 1; }
+  .bk-row .bk-color { flex: 0 0 72px; }
+  .bk-hint { font-size: 0.85rem; color: var(--muted); }
+  .bk-link { font: inherit; font-size: 0.85rem; background: none; border: none; color: var(--red); cursor: pointer; text-decoration: underline; flex: 0 0 auto; }
+  .bk .msg { margin-top: 10px; }
+  @media (max-width: 800px) { .bk-grid { grid-template-columns: 1fr; } }
+
+  /* ---------- Footer ---------- */
+  .site-foot {
+    padding: 24px 16px 70px;
+    display: flex;
+    justify-content: center;
+  }
+  .foot-tag {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    text-align: center;
+    max-width: 900px;
+    padding: 10px 18px;
+    border-radius: 14px;
+    border: 1px solid var(--bar-border);
+    background: var(--bar);
+    color: var(--ink);
+  }
+
+  .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .divider { width: 1px; height: 24px; background: var(--bar-border); }
+  button.action {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 6px 11px;
+    border-radius: 7px;
+    border: 1px solid var(--bar-border);
+    background: var(--btn);
+    color: var(--ink);
+    cursor: pointer;
+    min-width: 32px;
+  }
+  button.action:hover { filter: brightness(0.96); }
+
+  /* ---------- Layout: canvas area + right panel ---------- */
+  #layout { display: flex; align-items: stretch; }
+  #stage {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--menu-h));
+    padding: 40px;
+  }
+  #board {
+    position: relative;
+    margin: auto;               /* centers the grid; when it is larger than the screen, the page scrolls */
+    background: #ffffff;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--bar-border);
+  }
+  #canvas, #overlay {
+    display: block;
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+  #overlay { pointer-events: none; }
+  #canvas { cursor: crosshair; touch-action: pan-x pan-y pinch-zoom; }
+  #canvas.panning { cursor: grab; }
+  #canvas.panning:active { cursor: grabbing; }
+
+  /* ---------- Right panel ---------- */
+  #panel {
+    flex: 0 0 320px;
+    position: sticky;
+    top: var(--menu-h);
+    align-self: flex-start;
+    height: calc(100vh - var(--menu-h));
+    overflow-y: auto;
+    background: var(--bar);
+    border-left: 2px solid var(--bar-border);
+    padding: 18px 18px 22px;
+  }
+  .p-title {
+    font-family: "Lazy Arie", "Comic Sans MS", cursive;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--red);
+  }
+  .p-sub { font-size: 0.95rem; color: var(--ink); margin: 6px 0 14px; }
+  .sec-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 16px 0 7px;
+  }
+
+  .sizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .size {
+    font: inherit;
+    font-size: 0.95rem;
+    padding: 8px 0;
+    border-radius: 8px;
+    border: 1px solid var(--bar-border);
+    background: var(--field);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .size.on { background: var(--yellow); border-color: #b07f00; color: var(--ink); font-weight: bold; }
+
+  .total-card {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10px;
+    background: var(--field);
+    border: 1px solid var(--bar-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .tc-label { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .tc-value { font-size: 1rem; margin-top: 4px; color: var(--ink); }
+  .tc-amount { font-size: 2rem; line-height: 1; color: var(--red); text-align: right; }
+  .tc-count { font-size: 1rem; text-align: right; margin-top: 4px; color: var(--ink); }
+
+  .link-btn {
+    font: inherit;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--ink);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .upload {
+    display: block;
+    text-align: center;
+    padding: 16px 10px;
+    border: 1px dashed var(--bar-border);
+    border-radius: 10px;
+    background: var(--field);
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .upload:hover { border-color: var(--ink); }
+  .sr-only { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .help { font-size: 0.8rem; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+  .field {
+    width: 100%;
+    font: inherit;
+    font-size: 0.95rem;
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--bar-border);
+    background: var(--field);
+    color: var(--ink);
+  }
+  .field:focus { outline: 2px solid var(--yellow); outline-offset: 0; }
+
+  .claim {
+    width: 100%;
+    margin-top: 20px;
+    font: inherit;
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    background: var(--red);
+    color: #ffffff;
+    cursor: pointer;
+  }
+  .claim:hover { filter: brightness(1.06); }
+  .msg { font-size: 0.85rem; margin-top: 10px; min-height: 1.2em; color: var(--ink); line-height: 1.4; }
+  .msg.bad { color: var(--red); }
+  .fine { font-size: 0.8rem; color: var(--muted); margin: 8px 0 0; line-height: 1.4; }
+
+  /* ---------- Floating status and hint ---------- */
+  .status {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bar);
+    border: 1px solid var(--bar-border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    color: var(--ink);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    z-index: 6;
+    pointer-events: none;
+  }
+  .hint {
+    position: fixed;
+    bottom: 12px;
+    left: 24px;
+    font-size: 0.75rem;
+    color: var(--ink);
+    background: var(--bar);
+    border: 1px solid var(--bar-border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    z-index: 6;
+    pointer-events: none;
+    max-width: 300px;
+    line-height: 1.4;
+  }
+
+  /* ---------- Checkout page ---------- */
+  .co[hidden] { display: none; }
+  .co {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: var(--page);
+    display: flex;
+    overflow: auto;
+  }
+  .co-left { flex: 1 1 auto; min-width: 0; padding: 36px 48px; }
+  .co-right {
+    flex: 0 0 460px;
+    background: var(--bar);
+    border-left: 2px solid var(--bar-border);
+    padding: 36px 40px;
+  }
+  .co-back {
+    font: inherit;
+    font-size: 1rem;
+    background: none;
+    border: none;
+    color: var(--ink);
+    cursor: pointer;
+    padding: 0;
+  }
+  .co-brand {
+    font-family: "Lazy Arie", "Comic Sans MS", cursive;
+    font-size: 1.7rem;
+    line-height: 1;
+    margin: 16px 0 24px;
+  }
+  .co-brand .red { color: var(--red); }
+  .co-brand .yellow { color: var(--yellow); text-shadow: 1px 1px 0 #7a1f1f; }
+  .co-h { font-size: 1.4rem; color: var(--muted); margin-bottom: 24px; }
+  .co-sec {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 18px 0 8px;
+  }
+  .co-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--bar-border);
+  }
+  .co-item { font-size: 1.1rem; }
+  .co-meta { font-size: 0.9rem; color: var(--muted); margin-top: 4px; }
+  .co-price { font-size: 1.1rem; white-space: nowrap; }
+  .co-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.5rem;
+    padding-top: 16px;
+  }
+  .co-total span:last-child { color: var(--red); }
+  .co-note { font-size: 0.85rem; color: var(--muted); margin-top: 10px; }
+  .co-box {
+    background: var(--field);
+    border: 1px solid var(--bar-border);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+  .co-row { display: flex; gap: 8px; margin-top: 8px; }
+  .co-row > * { flex: 1; }
+  .co-pay {
+    width: 100%;
+    margin-top: 18px;
+    font: inherit;
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    background: var(--red);
+    color: #ffffff;
+    cursor: pointer;
+  }
+  .co-pay:hover { filter: brightness(1.06); }
+  .co-cur-row { display: flex; gap: 8px; margin-top: 4px; }
+  .co-cur, .co-tab {
+    font: inherit;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    border-radius: 9px;
+    border: 1px solid var(--bar-border);
+    background: var(--field);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .co-cur.on, .co-tab.on { background: var(--yellow); border-color: #b07f00; font-weight: bold; }
+  .co-tabs { display: flex; gap: 8px; }
+  .co-tabs .co-tab { flex: 1; }
+  .co-msg { font-size: 0.85rem; margin-top: 12px; line-height: 1.4; min-height: 1.2em; }
+  @media (max-width: 900px) {
+    .co { flex-direction: column; }
+    .co-left, .co-right { padding: 24px; }
+    .co-right { flex: none; border-left: none; border-top: 2px solid var(--bar-border); }
+  }
+
+  @media (max-width: 900px) {
+    #layout { flex-direction: column; }
+    #panel { position: static; flex: none; width: 100%; height: auto; border-left: none; border-top: 2px solid var(--bar-border); }
+    .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="menu">
+  <div class="brand"><span class="red">The $1</span> <span class="yellow">Internet</span></div>
+
+  <div class="tags">
+    <span class="tag red">10,00,000 PIXELS</span>
+    <span class="tag yellow">1$ per pixel</span>
+    <span class="tag">Own Your Piece of the Internet</span>
+  </div>
+
+  <div class="divider"></div>
+  <div class="group">
+    <button class="action" id="zoomOut" title="Zoom out">−</button>
+    <button class="action" id="zoomIn" title="Zoom in">+</button>
+    <button class="action" id="fullscreen" title="Full screen">⛶</button>
+  </div>
+  <div class="group">
+    <button class="action on" id="tabPixels">Pixel Wall</button>
+    <button class="action" id="tabPremium">Premium Tile</button>
+  </div>
+
+  <div class="stats">
+    <span class="tag stat" id="avail">Available: 1,000,000</span>
+    <span class="tag stat" id="sold">Sold: 0</span>
+  </div>
+</nav>
+
+<div id="layout">
+  <div id="stage">
+    <div id="board">
+      <canvas id="canvas"></canvas>
+      <canvas id="overlay"></canvas>
+    </div>
+  </div>
+
+  <aside id="panel">
+    <div class="p-title">Claim Pixels</div>
+    <div class="p-sub">$1 per pixel · forever yours</div>
+
+    <div class="sec-label">Square size</div>
+    <div class="sizes" id="sizes"></div>
+
+    <div class="total-card">
+      <div>
+        <div class="tc-label">Selected</div>
+        <div class="tc-value" id="selInfo">Nothing selected</div>
+        <button class="link-btn" id="clearSel">Clear selection</button>
+      </div>
+      <div>
+        <div class="tc-label" style="text-align:right">Total</div>
+        <div class="tc-amount" id="total">$0</div>
+        <div class="tc-count" id="count">0 px</div>
+      </div>
+    </div>
+
+    <div class="sec-label">Upload image or GIF</div>
+    <label class="upload" for="file">Upload image into selection</label>
+    <input class="sr-only" type="file" id="file" accept="image/*">
+    <div class="help">JPG, PNG or WEBP. The image is stretched to fill your selected pixels.</div>
+
+    <div class="sec-label">Destination URL</div>
+    <input class="field" id="url" type="url" placeholder="https://">
+
+    <div class="sec-label">Email (for receipt)</div>
+    <input class="field" id="email" type="email" placeholder="you@example.com">
+
+    <button class="claim" id="claim">Claim forever ›</button>
+    <div class="msg" id="msg"></div>
+    <p class="fine">We'll send your receipt here. No account needed.</p>
+  </aside>
+</div>
+
+<!-- Checkout page: opens when Claim forever is pressed -->
+<div class="co" id="checkout" hidden>
+  <div class="co-left">
+    <button class="co-back" id="coBack">← Back to pixels</button>
+    <div class="co-brand"><span class="red">The $1</span> <span class="yellow">Internet</span></div>
+    <div class="co-h">Pay for your pixels</div>
+    <select class="field" id="coCurrency" hidden></select>
+
+    <div class="co-sec">Your selection</div>
+    <div class="co-line">
+      <div>
+        <div class="co-item" id="coItem"></div>
+        <div class="co-meta" id="coMeta"></div>
+      </div>
+      <div class="co-price" id="coPrice"></div>
+    </div>
+    <div class="co-total"><span>Total</span><span id="coTotal"></span></div>
+    <div class="co-note" id="coNote"></div>
+  </div>
+
+  <div class="co-right">
+    <div class="co-sec" style="margin-top:0">Receipt email</div>
+    <div class="co-box" id="coEmail"></div>
+
+    <div class="co-sec">Payment method</div>
+    <div class="co-tabs">
+      <button class="co-tab on" id="tabCard">Card</button>
+      <button class="co-tab" id="tabUpi">UPI</button>
+    </div>
+    <div class="co-box" id="upiBox" hidden>
+      <input class="field" placeholder="Enter UPI ID (e.g. name@bank)" autocomplete="off">
+      <div class="co-note" style="margin-top:8px">You'll approve the payment in your UPI app.</div>
+    </div>
+    <div id="cardBox">
+    <div class="co-sec">Card</div>
+    <div class="co-box">
+      <input class="field" placeholder="Card number" inputmode="numeric" autocomplete="off">
+      <div class="co-row">
+        <input class="field" placeholder="MM / YY" autocomplete="off">
+        <input class="field" placeholder="Security code" autocomplete="off">
+      </div>
+      <input class="field" placeholder="Name on card" style="margin-top:8px" autocomplete="off">
+    </div>
+
+    </div>
+    <div class="co-sec">Billing country</div>
+    <select class="field" id="coCountry"></select>
+
+    <button class="co-pay" id="coPay">Pay $0</button>
+    <div class="co-msg" id="coMsg"></div>
+  </div>
+</div>
+
+<!-- Premium Tile: billboard for premium advertisers -->
+<div id="premiumView" hidden>
+  <div class="prem-wrap">
+    <div class="p-title">Premium Tile</div>
+    <div class="p-sub">Premium billboard for premium advertisers</div>
+    <div class="bb-list" id="billboard"></div>
+    <div class="prem-note">
+      Billboard slots are for premium members and advertisers. Premium placement is booked by request.
+    </div>
+  </div>
+</div>
+
+<!-- Billboard booking: logo, brand name, tagline and colour, then payment -->
+<div class="bk" id="bookModal" hidden>
+  <div class="bk-card" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
+    <div class="bk-head">
+      <div>
+        <div class="p-title" id="bkTitle">Book this billboard</div>
+        <div class="p-sub" id="bkSlot"></div>
+      </div>
+      <button class="bk-close" id="bkClose" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="bk-grid">
+      <div>
+        <div class="sec-label">Brand logo (optional)</div>
+        <label class="upload" for="bkLogo">Upload logo: PNG, JPG or WEBP, under 150 KB</label>
+        <input class="sr-only" type="file" id="bkLogo" accept="image/png,image/jpeg,image/webp">
+        <div class="sec-label">Brand name</div>
+        <input class="field" id="bkBrand" maxlength="40" placeholder="Your brand name">
+        <div class="sec-label">Tagline</div>
+        <input class="field" id="bkTagline" maxlength="80" placeholder="Your tagline">
+        <div class="sec-label">Background colour</div>
+        <input type="color" id="bkBg" class="bk-color" value="#55585c">
+        <div class="sec-label">Banner image (replaces the background colour, optional)</div>
+        <label class="upload" for="bkBanner">Upload banner: PNG, JPG or WEBP, 1 KB to 4 MB (resized automatically)</label>
+        <input class="sr-only" type="file" id="bkBanner" accept="image/png,image/jpeg,image/webp">
+        <div class="bk-row">
+          <span class="bk-hint" id="bkBannerName">No banner</span>
+          <button class="bk-link" id="bkBannerClear" type="button">Remove banner</button>
+        </div>
+        <div class="sec-label">Text colour and accent colour</div>
+        <div class="bk-row">
+          <input type="color" id="bkText" class="bk-color" value="#ffffff" title="Text colour">
+          <input type="color" id="bkAccent" class="bk-color" value="#f2b705" title="Accent colour">
+        </div>
+        <div class="sec-label">Font</div>
+        <select class="field" id="bkFont">
+          <option value="caviar">Caviar Dreams</option>
+          <option value="lazy">Lazy Arie</option>
+          <option value="arial">Arial</option>
+          <option value="georgia">Georgia</option>
+          <option value="impact">Impact</option>
+        </select>
+        <div class="bk-row">
+          <div>
+            <div class="sec-label">Text alignment</div>
+            <select class="field" id="bkAlign">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+          <div>
+            <div class="sec-label">Logo position</div>
+            <select class="field" id="bkLogoSide">
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+        </div>
+        <div class="sec-label">Email for receipt</div>
+        <input class="field" id="bkEmail" type="email" placeholder="you@example.com">
+      </div>
+      <div>
+        <div class="sec-label">Preview</div>
+        <div class="scene bk-scene">
+          <div class="lights"></div>
+          <div class="board" id="bkBoard"></div>
+          <div class="post a"></div>
+          <div class="post b"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bk-foot">
+      <div class="bk-price" id="bkPrice"></div>
+      <button class="bb-btn" id="bkBuy">Buy slot</button>
+    </div>
+    <div class="msg" id="bkMsg"></div>
+  </div>
+</div>
+
+<footer class="site-foot">
+  <div class="foot-tag">The $1 Internet © 2027. All rights reserved. I am not responsible for the content of external sites. Images featured on homepage are of their respective owners.</div>
+</footer>
+
+<div class="status" id="status">1,000,000 pixels</div>
+<div class="hint">Click for a square of the chosen size, or drag to select a rectangle. Scroll to move, Ctrl + scroll to zoom. Hold Space or Shift to drag the page.</div>
+
+<script>
+  const W = 1000, H = 1000, TOTAL = W * H;
+  const PRICE = 1; // dollars per pixel
+  const SIZES = [1, 5, 10, 20, 50, 100];
+
+  const menu = document.getElementById("menu");
+  const board = document.getElementById("board");
+  const canvas = document.getElementById("canvas");
+  const overlay = document.getElementById("overlay");
+  const ctx = canvas.getContext("2d");
+  const ctxO = overlay.getContext("2d");
+  canvas.width = W; canvas.height = H;
+  overlay.width = W; overlay.height = H;
+
+  const img = ctx.createImageData(W, H);
+  const px = new Uint32Array(img.data.buffer);
+
+  // Every pixel gets a random opaque colour
+  for (let i = 0; i < TOTAL; i++) {
+    px[i] = (0xff000000 | ((Math.random() * 0xffffff) | 0)) >>> 0;
+  }
+
+  // State
+  let squareSize = 1;         // chosen square size for click-to-select
+  let dirty = true;
+  let sel = null;             // {x0, y0, x1, y1} inclusive, or null
+
+  let s = 1, minS = 0.05;
+  const MAX_S = 40;
+
+  let panning = false, spaceDown = false;
+  let selecting = false, selMoved = false, selStart = null;
+  let panX = 0, panY = 0;
+  let hoverX = -1, hoverY = -1;
+  let scheduled = false;
+
+  // ---------- Rendering ----------
+  function requestRender() {
+    if (!scheduled) {
+      scheduled = true;
+      requestAnimationFrame(() => {
+        scheduled = false;
+        if (dirty) { ctx.putImageData(img, 0, 0); dirty = false; }
+        drawOverlay();
+        updateStatus();
+      });
+    }
+  }
+
+  function drawOverlay() {
+    ctxO.clearRect(0, 0, W, H);
+    if (!sel) return;
+    const w = sel.x1 - sel.x0 + 1, h = sel.y1 - sel.y0 + 1;
+    ctxO.fillStyle = "rgba(242, 183, 5, 0.28)";
+    ctxO.fillRect(sel.x0, sel.y0, w, h);
+    ctxO.strokeStyle = "#d62828";
+    ctxO.lineWidth = 1.5;
+    ctxO.setLineDash([4, 3]);
+    ctxO.strokeRect(sel.x0, sel.y0, w, h);
+  }
+
+  function applySize() {
+    board.style.width = (W * s) + "px";
+    board.style.height = (H * s) + "px";
+  }
+
+  function updateMenuVar() {
+    document.documentElement.style.setProperty("--menu-h", menu.offsetHeight + "px");
+  }
+
+  function setScale(ns, cx, cy) {
+    ns = Math.min(MAX_S, Math.max(minS, ns));
+    const r = canvas.getBoundingClientRect();
+    const fx = (cx - r.left) / r.width;
+    const fy = (cy - r.top) / r.height;
+    s = ns;
+    applySize();
+    const r2 = canvas.getBoundingClientRect();
+    window.scrollBy(r2.left + fx * r2.width - cx, r2.top + fy * r2.height - cy);
+    requestRender();
+  }
+
+  function fit() {
+    updateMenuVar();
+    const avail = document.getElementById("stage").clientWidth - 80;
+    s = Math.max(0.05, Math.min(avail / W, (innerHeight - menu.offsetHeight - 80) / H));
+    minS = Math.min(0.05, s);
+    applySize();
+    window.scrollTo(0, 0);
+    requestRender();
+  }
+
+  function updateStatus() {
+    const zoom = Math.round(s * 100);
+    const pos = (hoverX >= 0 && hoverY >= 0 && hoverX < W && hoverY < H)
+      ? `  ·  x ${hoverX}, y ${hoverY}` : "";
+    document.getElementById("status").textContent =
+      `1,000,000 pixels  ·  ${zoom}%${pos}`;
+  }
+
+  // ---------- Selection ----------
+  function setSel(x0, y0, x1, y1) {
+    sel = {
+      x0: Math.max(0, Math.min(x0, x1)),
+      y0: Math.max(0, Math.min(y0, y1)),
+      x1: Math.min(W - 1, Math.max(x0, x1)),
+      y1: Math.min(H - 1, Math.max(y0, y1))
+    };
+    updatePanel();
+    requestRender();
+  }
+
+  function squareAt(x, y, n) {
+    setSel(x, y, Math.min(W - 1, x + n - 1), Math.min(H - 1, y + n - 1));
+  }
+
+  function clearSel() {
+    sel = null;
+    updatePanel();
+    requestRender();
+  }
+
+  function selCount() {
+    return sel ? (sel.x1 - sel.x0 + 1) * (sel.y1 - sel.y0 + 1) : 0;
+  }
+
+  function updatePanel() {
+    const count = selCount();
+    const selInfo = document.getElementById("selInfo");
+    if (sel) {
+      const w = sel.x1 - sel.x0 + 1, h = sel.y1 - sel.y0 + 1;
+      selInfo.textContent = `${w} × ${h} block`;
+    } else {
+      selInfo.textContent = "Nothing selected";
+    }
+    document.getElementById("count").textContent = `${count.toLocaleString("en-US")} px`;
+    document.getElementById("total").textContent = `$${(count * PRICE).toLocaleString("en-US")}`;
+    document.querySelectorAll(".size").forEach(b => {
+      b.classList.toggle("on", Number(b.dataset.n) === squareSize);
+    });
+  }
+
+  // Write one pixel into the grid
+  function setPixel(x, y, c) {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const i = y * W + x;
+    if (px[i] === c) return;
+    px[i] = c;
+    dirty = true;
+  }
+
+  function imageCoords(e) {
+    const r = canvas.getBoundingClientRect();
+    return [
+      Math.floor((e.clientX - r.left) / r.width * W),
+      Math.floor((e.clientY - r.top) / r.height * H)
+    ];
+  }
+
+  // ---------- Pointer input ----------
+  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  canvas.addEventListener("pointerdown", (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    if (e.button === 1 || e.button === 2 || e.shiftKey || spaceDown) {
+      panning = true;
+      panX = e.clientX; panY = e.clientY;
+      canvas.classList.add("panning");
+      return;
+    }
+    const [x, y] = imageCoords(e);
+    selecting = true;
+    selMoved = false;
+    selStart = [x, y];
+    setSel(x, y, x, y);
+  });
+
+  canvas.addEventListener("pointermove", (e) => {
+    const [x, y] = imageCoords(e);
+    hoverX = x; hoverY = y;
+    if (panning) {
+      window.scrollBy(-(e.clientX - panX), -(e.clientY - panY));
+      panX = e.clientX; panY = e.clientY;
+    } else if (selecting) {
+      if (x !== selStart[0] || y !== selStart[1]) selMoved = true;
+      setSel(selStart[0], selStart[1], x, y);
+    }
+    requestRender();
+  });
+
+  function finish() {
+    if (selecting && !selMoved && selStart) {
+      // A single click selects a square of the chosen size from that pixel
+      squareAt(selStart[0], selStart[1], squareSize);
+    }
+    selecting = false;
+    selStart = null;
+    panning = false;
+    canvas.classList.remove("panning");
+  }
+  canvas.addEventListener("pointerup", finish);
+  canvas.addEventListener("pointercancel", finish);
+  canvas.addEventListener("pointerleave", () => { hoverX = hoverY = -1; requestRender(); });
+
+  // Ctrl + scroll (and trackpad pinch) zooms toward the cursor.
+  window.addEventListener("wheel", (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    setScale(s * Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
+  }, { passive: false });
+
+  // ---------- Keyboard ----------
+  window.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+      if (e.key === "Escape") e.target.blur();
+      return;
+    }
+    if (e.code === "Space") { spaceDown = true; canvas.classList.add("panning"); e.preventDefault(); }
+    if (e.key === "Escape") clearSel();
+  });
+  window.addEventListener("keyup", (e) => {
+    if (e.code === "Space") { spaceDown = false; canvas.classList.remove("panning"); }
+  });
+
+  // ---------- Menu bar ----------
+  document.getElementById("zoomIn").addEventListener("click", () =>
+    setScale(s * 1.5, innerWidth / 2, innerHeight / 2));
+  document.getElementById("zoomOut").addEventListener("click", () =>
+    setScale(s / 1.5, innerWidth / 2, innerHeight / 2));
+
+  document.getElementById("fullscreen").addEventListener("click", () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  });
+
+  // ---------- Right panel ----------
+  const sizesEl = document.getElementById("sizes");
+  SIZES.forEach(n => {
+    const b = document.createElement("button");
+    b.className = "size";
+    b.dataset.n = n;
+    b.textContent = n + "²";
+    b.addEventListener("click", () => {
+      squareSize = n;
+      // If something is already selected, resize it from its top-left corner
+      if (sel) squareAt(sel.x0, sel.y0, n);
+      updatePanel();
+    });
+    sizesEl.appendChild(b);
+  });
+
+  document.getElementById("clearSel").addEventListener("click", clearSel);
+
+  const msg = document.getElementById("msg");
+  function say(text, bad) {
+    msg.textContent = text;
+    msg.classList.toggle("bad", !!bad);
+  }
+
+  // Stretch an uploaded image into the selected pixels
+  document.getElementById("file").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!sel) { say("Select pixels first, then upload an image.", true); return; }
+
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      const w = sel.x1 - sel.x0 + 1, h = sel.y1 - sel.y0 + 1;
+      const tmp = document.createElement("canvas");
+      tmp.width = w; tmp.height = h;
+      const tctx = tmp.getContext("2d");
+      tctx.imageSmoothingEnabled = true;
+      tctx.drawImage(image, 0, 0, w, h);
+      const data = tctx.getImageData(0, 0, w, h).data;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          const c = ((255 << 24) | (data[i + 2] << 16) | (data[i + 1] << 8) | data[i]) >>> 0;
+          setPixel(sel.x0 + x, sel.y0 + y, c);
+        }
+      }
+      URL.revokeObjectURL(url);
+      dirty = true;
+      requestRender();
+      say("Image placed on your selection.");
+    };
+    image.onerror = () => { URL.revokeObjectURL(url); say("That file could not be opened.", true); };
+    image.src = url;
+  });
+
+  // Claim: validates the form. Payments are not connected in this page.
+  document.getElementById("claim").addEventListener("click", () => {
+    const count = selCount();
+    const url = document.getElementById("url").value.trim();
+    const email = document.getElementById("email").value.trim();
+    if (!count) { say("Select pixels on the canvas first.", true); return; }
+    if (!/^https?:\/\/\S+\.\S+/.test(url)) { say("Enter a destination URL starting with https://", true); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Enter a valid email for your receipt.", true); return; }
+    openCheckout(email);
+  });
+
+  // ---------- Checkout page ----------
+  const fmtUSD = n => "$" + n.toLocaleString("en-US");
+
+  // Checkout state. RATES = units of each currency per 1 US dollar.
+  // The INR rate is 94.85. The other rates are approximate placeholders: update them to live rates before taking real payments.
+  const RATES = {
+    USD: 1, INR: 94.85, EUR: 0.92, GBP: 0.79, JPY: 150, CNY: 7.2, AUD: 1.52, CAD: 1.37, CHF: 0.88, SGD: 1.35,
+    AED: 3.67, AFN: 70, ALL: 92, AMD: 390, ANG: 1.79, AOA: 920, ARS: 1000, AWG: 1.79, AZN: 1.7, BAM: 1.8,
+    BBD: 2, BDT: 122, BGN: 1.8, BHD: 0.376, BIF: 2900, BMD: 1, BND: 1.35, BOB: 6.9, BRL: 5.4, BSD: 1, BTN: 83,
+    BWP: 13.6, BYN: 3.25, BZD: 2, CDF: 2800, CLP: 930, COP: 4100, CRC: 510, CUP: 24, CVE: 102, CZK: 23, DJF: 178,
+    DKK: 6.9, DOP: 60, DZD: 134, EGP: 48, ERN: 15, ETB: 120, FJD: 2.25, FKP: 0.79, GEL: 2.7, GHS: 15, GIP: 0.79,
+    GMD: 71, GNF: 8600, GTQ: 7.8, GYD: 209, HKD: 7.8, HNL: 25, HTG: 132, HUF: 365, IDR: 16200, ILS: 3.7, IQD: 1310,
+    IRR: 42000, ISK: 138, JMD: 157, JOD: 0.71, KES: 129, KGS: 87, KHR: 4100, KMF: 455, KPW: 900, KRW: 1380, KWD: 0.31,
+    KYD: 0.83, KZT: 480, LAK: 22000, LBP: 89500, LKR: 300, LRD: 190, LSL: 18, LYD: 4.9, MAD: 10, MDL: 17.8, MGA: 4500,
+    MKD: 57, MMK: 2100, MNT: 3400, MOP: 8, MRU: 40, MUR: 46, MVR: 15.4, MWK: 1700, MXN: 17.5, MYR: 4.7, MZN: 64,
+    NAD: 18, NGN: 1500, NIO: 36.7, NOK: 10.7, NPR: 133, NZD: 1.66, OMR: 0.385, PAB: 1, PEN: 3.75, PGK: 3.9, PHP: 57,
+    PKR: 280, PLN: 3.95, PYG: 7400, QAR: 3.64, RON: 4.6, RSD: 108, RUB: 92, RWF: 1380, SAR: 3.75, SBD: 8.5, SCR: 13.6,
+    SDG: 600, SEK: 10.6, SHP: 0.79, SLE: 22.6, SOS: 571, SRD: 35, SSP: 1300, STN: 22.6, SYP: 13000, SZL: 18, THB: 35.5,
+    TJS: 10.9, TMT: 3.5, TND: 3.1, TOP: 2.36, TRY: 32, TTD: 6.8, TWD: 32, TZS: 2600, UAH: 41, UGX: 3800, UYU: 40,
+    UZS: 12600, VES: 36, VND: 25300, VUV: 119, WST: 2.75, XAF: 605, XCD: 2.7, XOF: 605, YER: 250, ZAR: 18.2, ZMW: 27
+  };
+  let checkoutCurrency = "INR";
+  let checkoutMethod = "card";
+  let checkoutEmail = "";
+
+  // Fill the currency list with every currency
+  const currencySel = document.getElementById("coCurrency");
+  const currencyNames = (() => { try { return new Intl.DisplayNames(["en"], { type: "currency" }); } catch (e) { return null; } })();
+  Object.keys(RATES).sort().forEach(code => {
+    const name = currencyNames ? currencyNames.of(code) : "";
+    currencySel.add(new Option(name && name !== code ? `${code} · ${name}` : code, code));
+  });
+  currencySel.value = checkoutCurrency;
+  currencySel.addEventListener("change", () => {
+    checkoutCurrency = currencySel.value;
+    renderCheckout();
+  });
+
+  function money(usd) {
+    const code = checkoutCurrency;
+    const amount = usd * (RATES[code] || 1);
+    try {
+      return new Intl.NumberFormat("en-US", { style: "currency", currency: code }).format(amount);
+    } catch (e) {
+      return code + " " + amount.toFixed(2);
+    }
+  }
+
+  function renderCheckout() {
+    const w = sel.x1 - sel.x0 + 1, h = sel.y1 - sel.y0 + 1;
+    const count = w * h;
+    const t = money(count * PRICE);
+    document.getElementById("coItem").textContent = `Pixel block ${w}×${h} at (${sel.x0}, ${sel.y0})`;
+    document.getElementById("coMeta").textContent = `${count.toLocaleString("en-US")} pixels on The $1 Internet`;
+    document.getElementById("coPrice").textContent = t;
+    document.getElementById("coTotal").textContent = t;
+    document.getElementById("coEmail").textContent = checkoutEmail;
+    document.getElementById("coPay").textContent = `Pay ${t}`;
+    document.getElementById("coNote").textContent =
+      `Each pixel is $1. Shown in ${checkoutCurrency} at ${RATES[checkoutCurrency] || 1} per US dollar . Charged in INR through Razorpay.`;
+    document.querySelectorAll(".co-cur").forEach(b => b.classList.toggle("on", b.dataset.cur === checkoutCurrency));
+    document.getElementById("tabCard").classList.toggle("on", checkoutMethod === "card");
+    document.getElementById("tabUpi").classList.toggle("on", checkoutMethod === "upi");
+    document.getElementById("cardBox").hidden = checkoutMethod !== "card";
+    document.getElementById("upiBox").hidden = checkoutMethod !== "upi";
+    document.getElementById("coMsg").textContent = "";
+  }
+
+  currencySel.value = checkoutCurrency;
+  document.getElementById("tabCard").addEventListener("click", () => { checkoutMethod = "card"; renderCheckout(); });
+  document.getElementById("tabUpi").addEventListener("click", () => { checkoutMethod = "upi"; renderCheckout(); });
+
+  function openCheckout(email) {
+    const w = sel.x1 - sel.x0 + 1, h = sel.y1 - sel.y0 + 1;
+    const count = w * h;
+    const total = count * PRICE;
+    document.getElementById("coItem").textContent = `Pixel block ${w}×${h} at (${sel.x0}, ${sel.y0})`;
+    document.getElementById("coMeta").textContent = `${count.toLocaleString("en-US")} pixels on The $1 Internet`;
+    checkoutEmail = email;
+    renderCheckout();
+    document.getElementById("coMsg").textContent = "";
+    document.getElementById("checkout").hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  document.getElementById("coBack").addEventListener("click", () => {
+    document.getElementById("checkout").hidden = true;
+  });
+
+  // Demo only: no card is charged and nothing is stored
+  document.getElementById("coPay").addEventListener("click", () => {
+    const btn = document.getElementById("coPay");
+    const coMsg = document.getElementById("coMsg");
+    const w = sel.x1 - sel.x0 + 1, h = sel.y1 - sel.y0 + 1;
+    btn.disabled = true;
+    coMsg.textContent = "Opening secure checkout...";
+    payWithRazorpay(sel.x0, sel.y0, w, h, checkoutEmail)
+      .then(() => { /* success message set in handler */ })
+      .catch(err => { coMsg.textContent = err.message || "Payment could not start."; })
+      .finally(() => { btn.disabled = false; });
+  });
+
+  // ---------- Billing country list ----------
+  const COUNTRIES = [
+    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia",
+    "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium",
+    "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria",
+    "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad",
+    "Chile", "China", "Colombia", "Comoros", "Congo (Republic)", "Congo (Democratic Republic)", "Costa Rica",
+    "Côte d'Ivoire", "Croatia", "Cuba", "Cyprus", "Czechia", "Denmark", "Djibouti", "Dominica",
+    "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini",
+    "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada",
+    "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia",
+    "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati",
+    "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania",
+    "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania",
+    "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
+    "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria",
+    "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea",
+    "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda",
+    "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino",
+    "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore",
+    "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain",
+    "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania",
+    "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+    "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan",
+    "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+  ];
+  const coCountry = document.getElementById("coCountry");
+  const countryPlaceholder = new Option("Select a country", "", true, true);
+  countryPlaceholder.disabled = true;
+  coCountry.add(countryPlaceholder);
+  COUNTRIES.forEach(c => coCountry.add(new Option(c, c)));
+
+  // ---------- Premium Tile: billboards and booking ----------
+  const BILLBOARD_SLOTS = [
+    { id: "b1", slot: "Billboard 1", panel: "#55585c", accent: "#f2b705" },
+    { id: "b2", slot: "Billboard 2", panel: "#6b1d1d", accent: "#f2b705" },
+    { id: "b3", slot: "Billboard 3", panel: "#2b3140", accent: "#d62828" },
+    { id: "b4", slot: "Billboard 4", panel: "#4a4536", accent: "#f2b705" },
+    { id: "b5", slot: "Billboard 5", panel: "#34433a", accent: "#d62828" }
+  ];
+  const FONT_STACKS = {
+    caviar: '"Caviar Dreams", "Trebuchet MS", system-ui, sans-serif',
+    lazy: '"Lazy Arie", "Comic Sans MS", cursive',
+    arial: 'Arial, Helvetica, sans-serif',
+    georgia: 'Georgia, serif',
+    impact: 'Impact, "Haettenschweiler", sans-serif'
+  };
+  const DEFAULT_DESIGN = {
+    textColor: "#ffffff", accentColor: "#f2b705", font: "caviar",
+    align: "left", logoSide: "left", banner: ""
+  };
+  let billboardData = {};   // slot id -> booked brand and design, from the server
+  // Shown straight away; replaced by the server's price when it loads
+  let billboardPrice = `$100 (₹${(100 * 94.85).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+  const bk = { slot: null, logo: "", banner: "" };
+
+  // A slightly darker shade of a hex colour, for the lower half of the panel
+  function shade(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const f = 0.8;
+    const r = Math.round(((n >> 16) & 255) * f);
+    const g = Math.round(((n >> 8) & 255) * f);
+    const b = Math.round((n & 255) * f);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  // Paints a billboard face from its design. Used on the billboards and in the booking preview.
+  function paintBoard(board, o) {
+    const d = Object.assign({}, DEFAULT_DESIGN, o);
+    board.textContent = "";
+    board.style.color = d.textColor;
+    board.style.fontFamily = FONT_STACKS[d.font] || FONT_STACKS.caviar;
+    board.style.flexDirection = d.logoSide === "right" ? "row-reverse" : "row";
+    if (d.banner) {
+      board.style.background = `url("${d.banner}") center / cover no-repeat`;
+    } else {
+      const bg = o.bg || o.panel || "#55585c";
+      board.style.background = `linear-gradient(${bg}, ${shade(bg)})`;
+    }
+
+    // A banner covers the whole billboard, so the logo, name, tagline and accent bar are not shown
+    if (d.banner) return;
+
+    const logo = document.createElement("div");
+    logo.className = "b-logo";
+    if (o.logo) {
+      const img = document.createElement("img");
+      img.src = o.logo;
+      img.alt = "";
+      img.style.cssText = "max-width:100%;max-height:100%;object-fit:contain";
+      logo.append(img);
+    } else {
+      logo.textContent = "Logo";
+    }
+
+    const copy = document.createElement("div");
+    copy.className = "b-copy";
+    copy.style.textAlign = d.align;
+    const head = document.createElement("div");
+    head.className = "b-head";
+    head.textContent = o.brand || "Your brand here";
+    const sub = document.createElement("div");
+    sub.className = "b-sub";
+    sub.textContent = o.tagline || "Premium roadside slot";
+    const bar = document.createElement("div");
+    bar.className = "b-bar";
+    bar.style.background = d.accentColor;
+    bar.style.marginLeft = d.align === "center" ? "auto" : "";
+    bar.style.marginRight = d.align === "center" ? "auto" : "";
+    if (d.align === "right") bar.style.marginLeft = "auto";
+    copy.append(head, sub, bar);
+
+    board.append(logo, copy);
+  }
+
+  function renderBillboard() {
+    const list = document.getElementById("billboard");
+    list.textContent = "";
+    BILLBOARD_SLOTS.forEach((info, i) => {
+      const data = billboardData[info.id];
+
+      const row = document.createElement("div");
+      row.className = "bb-row " + (i % 2 === 0 ? "left" : "right");
+      const col = document.createElement("div");
+      col.className = "bb-col";
+
+      const scene = document.createElement("div");
+      scene.className = "scene";
+      const lights = document.createElement("div");
+      lights.className = "lights";
+      fillLights(lights);
+      const board = document.createElement("div");
+      board.className = "board";
+      paintBoard(board, Object.assign({ panel: info.panel, accentColor: info.accent }, data || {}));
+      const postA = document.createElement("div");
+      postA.className = "post a";
+      const postB = document.createElement("div");
+      postB.className = "post b";
+      scene.append(lights, board, postA, postB);
+
+      const meta = document.createElement("div");
+      meta.className = "bb-meta";
+      const slot = document.createElement("span");
+      slot.className = "bb-slot";
+      slot.textContent = info.slot;
+      meta.append(slot);
+      if (data) {
+        const booked = document.createElement("span");
+        booked.className = "bb-booked";
+        booked.textContent = "Booked";
+        meta.append(booked);
+      } else {
+        const btn = document.createElement("button");
+        btn.className = "bb-btn";
+        btn.style.background = "var(--red)";
+        btn.style.color = "#ffffff";
+        btn.textContent = "Book this billboard";
+        btn.addEventListener("click", () => openBooking(info.id));
+        meta.append(btn);
+      }
+
+      col.append(scene, meta);
+      row.append(col);
+      list.append(row);
+    });
+  }
+
+  function loadBillboards() {
+    fetch("/api/billboards")
+      .then(r => r.json())
+      .then(d => {
+        billboardData = {};
+        d.slots.forEach(s => {
+          if (s.booked) {
+            billboardData[s.id] = Object.assign(
+              { brand: s.brand, tagline: s.tagline, logo: s.logo, bg: s.bg },
+              s.design || {}
+            );
+          }
+        });
+        const inrLabel = d.price.inr.toLocaleString("en-IN", { style: "currency", currency: "INR" });
+        billboardPrice = `$${d.price.usd.toLocaleString("en-US")} (${inrLabel})`;
+        renderBillboard();
+      })
+      .catch(() => renderBillboard());
+  }
+
+  // ----- Booking dialog -----
+  const bkEls = {
+    modal: document.getElementById("bookModal"),
+    slot: document.getElementById("bkSlot"),
+    brand: document.getElementById("bkBrand"),
+    tagline: document.getElementById("bkTagline"),
+    bg: document.getElementById("bkBg"),
+    text: document.getElementById("bkText"),
+    accent: document.getElementById("bkAccent"),
+    font: document.getElementById("bkFont"),
+    align: document.getElementById("bkAlign"),
+    logoSide: document.getElementById("bkLogoSide"),
+    email: document.getElementById("bkEmail"),
+    logo: document.getElementById("bkLogo"),
+    banner: document.getElementById("bkBanner"),
+    bannerName: document.getElementById("bkBannerName"),
+    board: document.getElementById("bkBoard"),
+    price: document.getElementById("bkPrice"),
+    buy: document.getElementById("bkBuy"),
+    msg: document.getElementById("bkMsg")
+  };
+
+  function bkSay(text, bad) {
+    bkEls.msg.textContent = text;
+    bkEls.msg.classList.toggle("bad", !!bad);
+  }
+
+  // Everything the customer has chosen so far
+  function readDesign() {
+    return {
+      brand: bkEls.brand.value.trim(),
+      tagline: bkEls.tagline.value.trim(),
+      logo: bk.logo,
+      bg: bkEls.bg.value,
+      textColor: bkEls.text.value,
+      accentColor: bkEls.accent.value,
+      font: bkEls.font.value,
+      align: bkEls.align.value,
+      logoSide: bkEls.logoSide.value,
+      banner: bk.banner
+    };
+  }
+
+  function previewBooking() {
+    if (!bk.slot) return;
+    paintBoard(bkEls.board, Object.assign({ panel: bk.slot.panel }, readDesign()));
+  }
+
+  function openBooking(id) {
+    bk.slot = BILLBOARD_SLOTS.find(s => s.id === id);
+    bk.logo = "";
+    bk.banner = "";
+    bkEls.slot.textContent = `${bk.slot.slot} · Premium Tile`;
+    bkEls.brand.value = "";
+    bkEls.tagline.value = "";
+    bkEls.email.value = "";
+    bkEls.bg.value = bk.slot.panel;
+    bkEls.text.value = DEFAULT_DESIGN.textColor;
+    bkEls.accent.value = bk.slot.accent;
+    bkEls.font.value = DEFAULT_DESIGN.font;
+    bkEls.align.value = DEFAULT_DESIGN.align;
+    bkEls.logoSide.value = DEFAULT_DESIGN.logoSide;
+    bkEls.logo.value = "";
+    bkEls.banner.value = "";
+    bkEls.bannerName.textContent = "No banner";
+    bkEls.price.textContent = `Price: ${billboardPrice || "loading..."}`;
+    bkEls.buy.disabled = false;
+    bkSay("");
+    previewBooking();
+    bkEls.modal.hidden = false;
+  }
+
+  function closeBooking() {
+    bkEls.modal.hidden = true;
+  }
+
+  document.getElementById("bkClose").addEventListener("click", closeBooking);
+  bkEls.modal.addEventListener("click", e => { if (e.target === bkEls.modal) closeBooking(); });
+
+  // Live preview for every control
+  ["brand", "tagline", "bg", "text", "accent", "font", "align", "logoSide"].forEach(k => {
+    bkEls[k].addEventListener("input", previewBooking);
+    bkEls[k].addEventListener("change", previewBooking);
+  });
+
+  function readImage(file, maxBytes, sizeMsg, done) {
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      bkSay("The image must be a PNG, JPG or WEBP file.", true);
+      return;
+    }
+    if (file.size > maxBytes) {
+      bkSay(sizeMsg, true);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => done(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  bkEls.logo.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (!file) { bk.logo = ""; previewBooking(); return; }
+    readImage(file, 150 * 1024, "The logo must be under 150 KB.", data => {
+      bk.logo = data;
+      bkSay("");
+      previewBooking();
+    });
+  });
+
+  // Banner size: the billboard face is about 4 : 1, so banners are cropped to fill it at 1200 x 300
+  const BANNER_W = 1200, BANNER_H = 300;
+
+  // Scales and crops the picture to fill the billboard, so it is never stretched
+  function resizeBanner(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = BANNER_W;
+        canvas.height = BANNER_H;
+        const ctx2 = canvas.getContext("2d");
+        ctx2.fillStyle = "#000000";
+        ctx2.fillRect(0, 0, BANNER_W, BANNER_H);
+        const scale = Math.max(BANNER_W / img.width, BANNER_H / img.height);
+        const w = img.width * scale;
+        const hgt = img.height * scale;
+        ctx2.imageSmoothingQuality = "high";
+        ctx2.drawImage(img, (BANNER_W - w) / 2, (BANNER_H - hgt) / 2, w, hgt);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("That image could not be opened. Try another file."));
+      };
+      img.src = url;
+    });
+  }
+
+  bkEls.banner.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      bkSay("The banner must be a PNG, JPG or WEBP file.", true);
+      e.target.value = "";
+      return;
+    }
+    if (file.size < 1024 || file.size > 4 * 1024 * 1024) {
+      bkSay("The banner must be between 1 KB and 4 MB.", true);
+      e.target.value = "";
+      return;
+    }
+    bkSay("Resizing your banner...");
+    resizeBanner(file)
+      .then(data => {
+        bk.banner = data;
+        bkEls.bannerName.textContent = `${file.name} (resized to ${BANNER_W} × ${BANNER_H})`;
+        bkSay("");
+        previewBooking();
+      })
+      .catch(err => bkSay(err.message, true));
+  });
+
+  document.getElementById("bkBannerClear").addEventListener("click", () => {
+    bk.banner = "";
+    bkEls.banner.value = "";
+    bkEls.bannerName.textContent = "No banner";
+    previewBooking();
+  });
+
+  // Razorpay checkout for a billboard order. Resolves once the server confirms the payment.
+  function openRazorpay(order, email, description) {
+    return new Promise((resolve, reject) => {
+      if (typeof Razorpay === "undefined") {
+        reject(new Error("The payment script did not load. Check your connection."));
+        return;
+      }
+      const rzp = new Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.orderId,
+        name: "The $1 Internet",
+        description,
+        prefill: { email },
+        theme: { color: "#d62828" },
+        handler: (resp) => {
+          fetch("/api/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resp)
+          })
+            .then(r => r.json())
+            .then(check => check.ok ? resolve() : reject(new Error(check.error || "Payment could not be verified.")))
+            .catch(reject);
+        },
+        modal: { ondismiss: () => reject(new Error("Payment cancelled.")) }
+      });
+      rzp.on("payment.failed", (resp) => reject(new Error(resp.error.description)));
+      rzp.open();
+    });
+  }
+
+  // Buy slot: check the details, create the order, open payment, then show the design on the billboard
+  bkEls.buy.addEventListener("click", () => {
+    const design = readDesign();
+    const email = bkEls.email.value.trim();
+    if (!design.brand) { bkSay("Enter your brand name.", true); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { bkSay("Enter a valid email for your receipt.", true); return; }
+
+    bkEls.buy.disabled = true;
+    bkSay("Opening secure payment...");
+    fetch("/api/billboard/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.assign({ slot: bk.slot.id, email }, design))
+    })
+      .then(async r => {
+        const d = await readJsonOrExplain(r);
+        if (!r.ok) throw new Error(d.error || "Could not start the payment.");
+        return d;
+      })
+      .then(order => openRazorpay(order, email, `${bk.slot.slot} on Premium Tile`))
+      .then(() => {
+        bkSay("Payment successful. Your billboard is live.");
+        loadBillboards();
+      })
+      .catch(err => bkSay(err.message || "Payment could not be completed.", true))
+      .finally(() => { bkEls.buy.disabled = false; });
+  });
+
+  // ---------- Time of day: sky colours and billboard lights ----------
+  // Colours for each time of day, from midnight (0) to midnight (24)
+  const SKY_STOPS = [
+    { h: 0,  top: "#0b1026", bottom: "#1d2a52", gTop: "#17201a", gBot: "#0c120d" },
+    { h: 5,  top: "#1d2a52", bottom: "#4b4f78", gTop: "#23291d", gBot: "#11150e" },
+    { h: 7,  top: "#f2a16b", bottom: "#ffd9a8", gTop: "#6e7a4b", gBot: "#4b5734" },
+    { h: 10, top: "#6fa8d8", bottom: "#b9d8ee", gTop: "#7d8a5a", gBot: "#56643f" },
+    { h: 16, top: "#6fa8d8", bottom: "#c9e3f2", gTop: "#7d8a5a", gBot: "#56643f" },
+    { h: 18, top: "#e88a5c", bottom: "#ffc78a", gTop: "#6f7a4a", gBot: "#4a5532" },
+    { h: 20, top: "#3b3f7a", bottom: "#c0728a", gTop: "#3c4530", gBot: "#222a1c" },
+    { h: 22, top: "#0b1026", bottom: "#1d2a52", gTop: "#17201a", gBot: "#0c120d" },
+    { h: 24, top: "#0b1026", bottom: "#1d2a52", gTop: "#17201a", gBot: "#0c120d" }
+  ];
+
+  function mixHex(a, b, t) {
+    const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+    const ch = n => [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    const A = ch(pa), B = ch(pb);
+    const c = A.map((v, i) => Math.round(v + (B[i] - v) * t));
+    return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+  }
+
+  // Blends the sky between the stops for the current time, and turns the lights on at night
+  function applySky(now) {
+    const hour = now.getHours() + now.getMinutes() / 60;
+    let i = 0;
+    while (i < SKY_STOPS.length - 2 && hour >= SKY_STOPS[i + 1].h) i++;
+    const a = SKY_STOPS[i], b = SKY_STOPS[i + 1];
+    const t = Math.min(1, Math.max(0, (hour - a.h) / (b.h - a.h)));
+    const root = document.documentElement.style;
+    root.setProperty("--sky-top", mixHex(a.top, b.top, t));
+    root.setProperty("--sky-bottom", mixHex(a.bottom, b.bottom, t));
+    root.setProperty("--ground-top", mixHex(a.gTop, b.gTop, t));
+    root.setProperty("--ground-bottom", mixHex(a.gBot, b.gBot, t));
+    const night = hour < 6 || hour >= 19;
+    root.setProperty("--sun-glow", night ? "rgba(200, 210, 255, 0.15)" : "rgba(255, 255, 255, 0.45)");
+    document.documentElement.classList.toggle("is-night", night);
+  }
+  const tickSky = () => applySky(new Date());
+  tickSky();
+  setInterval(tickSky, 60 * 1000);
+
+  // Three bulbs, placed at equal spacing along the top of a billboard
+  function fillLights(el) {
+    el.textContent = "";
+    for (let i = 0; i < 3; i++) {
+      const bulb = document.createElement("span");
+      bulb.className = "bulb";
+      el.append(bulb);
+    }
+  }
+  document.querySelectorAll(".lights").forEach(fillLights);
+
+  loadBillboards();
+
+  function showTab(name) {
+    const premium = name === "premium";
+    document.getElementById("layout").hidden = premium;
+    document.getElementById("premiumView").hidden = !premium;
+    document.getElementById("status").hidden = premium;
+    document.getElementById("hint").hidden = premium;
+    document.getElementById("tabPixels").classList.toggle("on", !premium);
+    document.getElementById("tabPremium").classList.toggle("on", premium);
+    window.scrollTo(0, 0);
+  }
+  document.getElementById("tabPixels").addEventListener("click", () => showTab("pixels"));
+  document.getElementById("tabPremium").addEventListener("click", () => showTab("premium"));
+
+  // ---------- Pixel stats ----------
+  // soldPixels stays 0 until a payment backend records completed purchases. Only add to it after a real payment succeeds.
+  let soldPixels = 0;
+  function updateStats() {
+    const available = TOTAL - soldPixels;
+    document.getElementById("avail").textContent = `Available: ${available.toLocaleString("en-US")}`;
+    document.getElementById("sold").textContent = `Sold: ${soldPixels.toLocaleString("en-US")}`;
+  }
+  updateStats();
+  loadStats();
+
+  // ---------- Razorpay payment ----------
+  // Reads a server reply as JSON. If the reply is plain text or HTML (for example "not found"),
+  // the page says what to do instead of showing a parse error.
+  async function readJsonOrExplain(r) {
+    const text = await r.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      throw new Error("The payment server did not respond. Run npm start and open http://localhost:3000 instead of this page.");
+    }
+  }
+
+  function payWithRazorpay(x, y, width, height, email) {
+    return fetch("/api/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x, y, width, height })
+    })
+      .then(async r => {
+        const data = await readJsonOrExplain(r);
+        if (!r.ok) throw new Error(data.error || "Could not create the order.");
+        return data;
+      })
+      .then(order => new Promise((resolve, reject) => {
+        if (typeof Razorpay === "undefined") {
+          reject(new Error("The payment script could not load. Check your connection."));
+          return;
+        }
+        const rzp = new Razorpay({
+          key: order.keyId,
+          amount: order.amount,
+          currency: order.currency,
+          order_id: order.orderId,
+          name: "The $1 Internet",
+          description: `${width * height} pixel(s) at (${x}, ${y})`,
+          prefill: { email },
+          theme: { color: "#d62828" },
+          handler: (resp) => {
+            fetch("/api/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(resp)
+            })
+              .then(r => r.json())
+              .then(check => {
+                if (check.ok) {
+                  document.getElementById("coMsg").textContent = "Payment successful. Your pixels are yours.";
+                  loadStats();
+                  resolve();
+                } else {
+                  reject(new Error(check.error || "Payment could not be verified."));
+                }
+              })
+              .catch(reject);
+          },
+          modal: { ondismiss: () => reject(new Error("Payment cancelled.")) }
+        });
+        rzp.on("payment.failed", (resp) => reject(new Error(resp.error.description)));
+        rzp.open();
+      }));
+  }
+
+  // Live sold and available counts from the server
+  function loadStats() {
+    fetch("/api/stats")
+      .then(r => r.json())
+      .then(d => { soldPixels = d.sold; updateStats(); })
+      .catch(() => {});
+  }
+
+  window.addEventListener("resize", updateMenuVar);
+  window.addEventListener("load", fit);
+
+  // ---------- Init ----------
+  updateMenuVar();
+  fit();
+  updatePanel();
+  requestRender();
+</script>
+</body>
+</html>
